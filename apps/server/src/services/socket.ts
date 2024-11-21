@@ -1,4 +1,8 @@
 import { Server } from "socket.io";
+import Redis from "ioredis";
+
+const publisher = new Redis();
+const subscriber = new Redis();
 
 class SocketService {
   private _io: Server;
