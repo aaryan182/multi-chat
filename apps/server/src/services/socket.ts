@@ -1,8 +1,18 @@
 import { Server } from "socket.io";
 import Redis from "ioredis";
 
-const publisher = new Redis();
-const subscriber = new Redis();
+const publisher = new Redis({
+  host: "redis-19190.c212.ap-south-1-1.ec2.redns.redis-cloud.com",
+  port: 19190,
+  username: "default",
+  password: "default",
+});
+const subscriber = new Redis({
+  host: "redis-19190.c212.ap-south-1-1.ec2.redns.redis-cloud.com",
+  port: 19190,
+  username: "default",
+  password: "default",
+});
 
 class SocketService {
   private _io: Server;
@@ -15,6 +25,7 @@ class SocketService {
         origin: ["*"],
       },
     });
+    subscriber.subscribe("MESSAGES");
   }
 
   public initListeners() {
@@ -25,7 +36,14 @@ class SocketService {
 
       socket.on("event:message", async ({ message }: { message: string }) => {
         console.log("New message recieved ", message);
+        await publisher.publish("MESSAGES", JSON.stringify({ message }));
       });
+    });
+
+    subscriber.on("message", (channel, message) => {
+      if(channel === "MESSAGES") {
+        io.emit("event:message", JSON.parse(message));
+      }
     });
   }
 
